@@ -19,39 +19,7 @@ socket.on('disconnect', () => {
     statusElement.style.color = '#f44336';
 });
 
-// Réception de messages
-socket.on('message', (data) => {
-    displayMessage(data);
-});
+function move() {
 
-// Envoi de message
-function sendMessage() {
-    const message = messageInput.value.trim();
-    if (message) {
-        socket.emit('message', {
-            text: message,
-            timestamp: new Date().toLocaleTimeString()
-        });
-        messageInput.value = '';
-    }
 }
 
-sendBtn.addEventListener('click', sendMessage);
-
-messageInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        sendMessage();
-    }
-});
-
-// Affichage des messages
-function displayMessage(data) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = 'message';
-    messageDiv.innerHTML = `
-        <span class="time">${data.timestamp}</span>
-        <span class="text">${data.text}</span>
-    `;
-    messagesElement.appendChild(messageDiv);
-    messagesElement.scrollTop = messagesElement.scrollHeight;
-}
