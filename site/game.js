@@ -5,23 +5,27 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 let carImg = new Image();
-carImg.src = "car.png"; // Mets ici l’image de ta voiture (PNG avec fond transparent)
+carImg.src = "voitoure.png"; // image de voiture PNG avec fond transparent
 
 let cityImg = new Image();
-cityImg.src = "city-silhouette.png"; // Silhouette de ville
+cityImg.src = "ville.png"; // Silhouette de ville
 
 let car = { 
-  x: canvas.width / 2 - 40, 
-  y: canvas.height - 140, 
-  w: 80, 
-  h: 120, 
-  speed: 8 
+  x: 0, y: 0, w: 80, h: 120, speed: 8 
+};
+
+carImg.onload = () => {
+  const scale = 0.15; // échelle (15% de la taille d'origine par ex.)
+  car.w = carImg.width * scale;
+  car.h = carImg.height * scale;
+  car.x = canvas.width / 2 - car.w / 2;
+  car.y = canvas.height - car.h - 20;
 };
 
 let obstacles = [];
 let roadLines = [];
 let gameRunning = true;
-let horizonY = canvas.height / 3; // Position de l’horizon
+let horizonY = canvas.height / 3; // Position de la ville
 
 // Lignes de route
 for (let i = 0; i < 20; i++) {
@@ -35,16 +39,23 @@ function drawBackground() {
   ctx.fillRect(0, horizonY, canvas.width, 2);
 
   // Silhouette de ville
-  ctx.drawImage(cityImg, 0, horizonY - 100, canvas.width, 150);
+  ctx.drawImage(cityImg, 0, horizonY - 135, canvas.width, 150);
 }
 
 // Dessiner la route
 function drawRoad() {
   ctx.fillStyle = "#0ff";
   roadLines.forEach(line => {
+    if (line.y + line.h < horizonY) return; // n'affiche pas au-dessus de l’horizon
     ctx.fillRect(line.x, line.y, line.w, line.h);
   });
 }
+
+// Mise à jour des lignes
+roadLines.forEach(line => {
+  line.y += 10;
+  if (line.y > canvas.height) line.y = -40;
+});
 
 // Dessiner obstacles
 function drawObstacles() {
@@ -61,7 +72,7 @@ function drawCar() {
 function spawnObstacle() {
   const laneWidth = canvas.width / 3;
   const lane = Math.floor(Math.random() * 3);
-  obstacles.push({ x: lane * laneWidth + laneWidth / 2 - 25, y: -100, w: 50, h: 100 });
+  obstacles.push({ x: lane * laneWidth + laneWidth / 2 - 25, y: horizonY, w: 50, h: 100 });
 }
 
 // Boucle du jeu
@@ -70,33 +81,41 @@ function update() {
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Arrière-plan (horizon + ville)
-  drawBackground();
+  // 1. Fond
+  ctx.fillStyle = "#081040";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Route
+  // 2. Route (pointillés)
   roadLines.forEach(line => {
     line.y += 10;
     if (line.y > canvas.height) line.y = -40;
   });
   drawRoad();
 
-  // Obstacles
+  // 3. Obstacles (au-dessus de la route, mais sous la ville)
   obstacles.forEach(o => o.y += 6);
   obstacles = obstacles.filter(o => o.y < canvas.height + 100);
   drawObstacles();
 
-  // Collision
+  // 4. Ville (recouvre la route au fond, mais pas la voiture)
+  drawBackground();
+
+  // 5. Collision check (sur les vraies positions, peu importe l’ordre visuel)
   obstacles.forEach(o => {
-    if (car.x < o.x + o.w && car.x + car.w > o.x && car.y < o.y + o.h && car.y + car.h > o.y) {
+    if (car.x < o.x + o.w &&
+        car.x + car.w > o.x &&
+        car.y < o.y + o.h &&
+        car.y + car.h > o.y) {
       gameOver();
     }
   });
 
-  // Voiture
+  // 6. Voiture (au-dessus de tout)
   drawCar();
 
   requestAnimationFrame(update);
 }
+
 
 // Contrôles clavier
 document.addEventListener("keydown", e => {
