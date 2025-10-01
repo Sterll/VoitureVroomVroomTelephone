@@ -1,0 +1,197 @@
+body {
+    margin: 0;
+    font-family: 'Orbitron', sans-serif;
+    background: radial-gradient(circle at top, #0f0f3d, #050510);
+    color: #fff;
+    text-align: center;
+    overflow: hidden;
+    animation: gradientAnim 8s ease infinite;
+}
+
+
+.container {
+    margin-top: 15vh;
+}
+
+.title {
+    font-size: 3rem;
+    color: #9f7aea;
+    text-shadow: 0 0 20px #9f7aea, 0 0 40px #5a4fcf;
+    margin-bottom: 50px;
+}
+
+/* ---- BUTTONS ---- */
+.btn {
+    padding: 15px 40px;
+    margin: 15px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.neon {
+    color: #fff;
+    background: transparent;
+    border: 2px solid #7f5af0;
+    box-shadow: 0 0 10px #7f5af0, 0 0 40px #5a4fcf inset;
+}
+
+.neon:hover {
+    background: #5a4fcf;
+    transform: scale(1.05);
+    box-shadow: 0 0 20px #7f5af0, 0 0 60px #5a4fcf;
+}
+
+/* Panneau central */
+.info-panel {
+    width: 100%;
+    padding: 40px 20px;
+    background: rgba(15, 15, 40, 0.7); /* effet bande */
+    border-top: 1px solid rgba(127, 90, 240, 0.3);
+    border-bottom: 1px solid rgba(127, 90, 240, 0.3);
+    margin-top: 60px;
+    text-align: center;
+    animation: fadeIn 1.2s ease;
+}
+
+.info-panel p {
+    font-size: 1.2rem;
+    line-height: 1.6;
+    max-width: 700px;
+    margin: auto;
+    color: #ccc;
+    text-shadow: 0 0 5px #5a4fcf;
+}
+
+.highlight {
+    color: #9f7aea;
+    font-weight: bold;
+    text-shadow: 0 0 10px #9f7aea, 0 0 20px #5a4fcf;
+}
+
+/* ---- MODAL ---- */
+.modal {
+    display: none; 
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(10, 10, 30, 0.8);
+    backdrop-filter: blur(5px);
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: #1a1a3d;
+    border: 2px solid #7f5af0;
+    padding: 30px;
+    border-radius: 12px;
+    width: 300px;
+    box-shadow: 0 0 20px #7f5af0, 0 0 40px #5a4fcf;
+    position: relative;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal-content h2 {
+    margin-bottom: 20px;
+}
+
+.modal-content input {
+    width: 100%;
+    margin: 10px 0;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: #0f0f2d;
+    color: #fff;
+    outline: none;
+}
+
+.generated-code {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #7f5af0;
+    text-shadow: 0 0 10px #7f5af0, 0 0 20px #5a4fcf;
+    margin: 20px 0;
+    letter-spacing: 3px;
+}
+
+.error {
+    color: #ff4d6d;
+    font-size: 0.9rem;
+    margin-top: 5px;
+    height: 20px;
+}
+
+/* Close button */
+.close {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    color: #fff;
+    position: absolute;
+    top: 10px; right: 15px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.close:hover {
+    transform: rotate(90deg);
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/*VIVE LA DECO mouhahah*/
+
+/* Lignes LED horizontales */
+.led-line {
+  width: 100%;
+  height: 4px;
+  background-color: #0ff;
+  box-shadow: 0 0 10px #0ff, 0 0 20px #0ff, 0 0 40px #0ff;
+  margin: 20px 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.led-anim {
+  height: 4px;
+  background: linear-gradient(90deg, #0ff, #00f, #0ff);
+  background-size: 200% 100%;
+  animation: moveLight 2s linear infinite;
+}
+
+@keyframes moveLight {
+  0% {background-position: 200% 0;}
+  100% {background-position: -200% 0;}
+}
+
+/* Petites LED flottantes */
+.led-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #f0f;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #f0f;
+  position: absolute;
+  animation: blink 1.5s infinite alternate;
+}
+
+@keyframes blink {
+  0% {opacity: 0.2;}
+  100% {opacity: 1;}
+}
+
+/* Exemple positionnement aléatoire des LEDs */
+.led-dot:nth-child(1) { top: 30px; left: 50px; animation-delay: 0s; }
+.led-dot:nth-child(2) { top: 80px; left: 150px; animation-delay: 0.5s; }
+.led-dot:nth-child(3) { top: 120px; left: 300px; animation-delay: 1s; }
+.led-dot:nth-child(4) { top: 170px; left: 450px; animation-delay: 1.5s; }
+.led-dot:nth-child(5) { top: 210px; left: 600px; animation-delay: 2s; }
+.led-dot:nth-child(6) { top: 260px; left: 850px; animation-delay: 2.5s; }

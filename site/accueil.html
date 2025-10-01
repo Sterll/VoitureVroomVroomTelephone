@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VroumvroumTéléphone</title>
+    <link rel="stylesheet" href="accueil.css">
+    </style>
+
+<!-- HTML décoratif -->
+<div class="led-line">
+  <div class="led-anim"></div>
+</div>
+
+<div class="led-dot"></div>
+<div class="led-dot"></div>
+<div class="led-dot"></div>
+<div class="led-dot"></div>
+<div class="led-dot"></div>
+<div class="led-dot"></div>
+
+</head>
+<body>
+    <div class="container">
+    <h1 class="title">Vrouuum</h1>
+    <div class="buttons">
+        <button id="createBtn" class="btn neon">Créer une Room</button>
+        <button id="joinBtn" class="btn neon">Rejoindre une Room</button>
+    </div>
+</div>
+
+<!-- Zone Info -->
+<div class="info-panel">
+    <p>
+        Bienvenue dans <span class="highlight">Vrouuum</span>!<br>
+        <span class="highlight">Créez</span> une room pour inviter vos amis et <span class="highlight">rejoignez-la </span>depuis
+        votre smartphone qui se transforme en manette grâce à sa gyroscopie intégré.
+    </p>
+</div>
+
+<!-- Modal Création -->
+<div id="createModal" class="modal">
+    <div class="modal-content">
+        <h2>Room créée</h2>
+        <p>Voici votre code :</p>
+        <p id="roomCodeDisplay" class="generated-code"></p>
+        <button class="close">✖</button>
+    </div>
+</div>
+
+<!-- Modal Rejoindre -->
+<div id="joinModal" class="modal">
+    <div class="modal-content">
+        <h2>Rejoindre une Room</h2>
+        <input type="text" id="pseudo" placeholder="Votre pseudo">
+        <input type="text" id="roomCode" placeholder="Code de la room">
+        <button id="joinRoom" class="btn neon">Rejoindre</button>
+        <p id="joinError" class="error"></p>
+        <button class="close">✖</button>
+    </div>
+</div>
+
+    
+
+    <script src="accueil.js"></script>
+</body>
+
+</html>

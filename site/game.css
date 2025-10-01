@@ -1,0 +1,46 @@
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: 'Orbitron', sans-serif;
+  background: linear-gradient(to top, #050510, #0f0f3d);
+  color: #fff;
+}
+
+#gameCanvas {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+/* Game Over */
+#gameOver {
+  display: none;
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: #ff4d6d;
+  text-shadow: 0 0 20px #ff1f4d, 0 0 40px #ff1f4d;
+}
+
+#gameOver h1 {
+  font-size: 3rem;
+}
+
+#gameOver button {
+  margin-top: 20px;
+  padding: 12px 30px;
+  font-size: 1.2rem;
+  background: transparent;
+  border: 2px solid #7f5af0;
+  color: #fff;
+  cursor: pointer;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #7f5af0, 0 0 30px #5a4fcf inset;
+  transition: 0.3s;
+}
+
+#gameOver button:hover {
+  background: #5a4fcf;
+}
