@@ -1,77 +1,99 @@
 body {
     margin: 0;
-    font-family: 'Orbitron', sans-serif;
-    background: radial-gradient(circle at top, #0f0f3d, #050510);
-    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    background: #1a1a1d;
+    color: #f5f5f5;
     text-align: center;
-    overflow: hidden;
-    animation: gradientAnim 8s ease infinite;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
-
 .container {
-    margin-top: 15vh;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
 }
 
 .title {
-    font-size: 3rem;
-    color: #9f7aea;
-    text-shadow: 0 0 20px #9f7aea, 0 0 40px #5a4fcf;
+    font-size: clamp(2rem, 8vw, 4rem);
+    color: #cf3d3d;
+    text-shadow: 2px 2px 0 #1a1a1d;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+    letter-spacing: 4px;
+    font-weight: 900;
+}
+
+.tagline {
+    font-size: 1.2rem;
+    color: #8d99ae;
+    margin-top: -20px;
     margin-bottom: 50px;
 }
 
-/* ---- BUTTONS ---- */
 .btn {
     padding: 15px 40px;
     margin: 15px;
-    font-size: 1.2rem;
+    font-size: 1.3rem;
     cursor: pointer;
     border: none;
-    border-radius: 8px;
-    transition: all 0.3s ease;
+    border-radius: 4px;
+    transition: all 0.2s ease-in-out;
+    text-transform: uppercase;
+    font-weight: bold;
 }
 
 .neon {
-    color: #fff;
-    background: transparent;
-    border: 2px solid #7f5af0;
-    box-shadow: 0 0 10px #7f5af0, 0 0 40px #5a4fcf inset;
+    color: #1a1a1d;
+    background: #cf3d3d;
+    border: 2px solid #a83333;
+    box-shadow: 0 4px 0 #a83333, 0 8px 15px rgba(0, 0, 0, 0.4);
 }
 
 .neon:hover {
-    background: #5a4fcf;
-    transform: scale(1.05);
-    box-shadow: 0 0 20px #7f5af0, 0 0 60px #5a4fcf;
+    background: #e34c4c;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #a83333, 0 10px 20px rgba(0, 0, 0, 0.5);
 }
 
-/* Panneau central */
 .info-panel {
-    width: 100%;
-    padding: 40px 20px;
-    background: rgba(15, 15, 40, 0.7); /* effet bande */
-    border-top: 1px solid rgba(127, 90, 240, 0.3);
-    border-bottom: 1px solid rgba(127, 90, 240, 0.3);
-    margin-top: 60px;
-    text-align: center;
-    animation: fadeIn 1.2s ease;
+    width: clamp(300px, 90%, 700px);
+    padding: 30px;
+    background: #2c3e50;
+    border: 1px solid #3f72af;
+    margin-top: 40px;
+    text-align: left;
+    border-radius: 6px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.8s ease;
+}
+
+.info-panel h2 {
+    color: #f5f5f5;
+    text-transform: uppercase;
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #3f72af;
+    padding-bottom: 5px;
 }
 
 .info-panel p {
-    font-size: 1.2rem;
-    line-height: 1.6;
-    max-width: 700px;
-    margin: auto;
-    color: #ccc;
-    text-shadow: 0 0 5px #5a4fcf;
+    font-size: 1rem;
+    line-height: 1.7;
+    color: #cccccc;
+    margin-bottom: 15px;
 }
 
 .highlight {
-    color: #9f7aea;
+    color: #cf3d3d;
     font-weight: bold;
-    text-shadow: 0 0 10px #9f7aea, 0 0 20px #5a4fcf;
 }
 
-/* ---- MODAL ---- */
 .modal {
     display: none; 
     position: fixed;
@@ -84,38 +106,39 @@ body {
 }
 
 .modal-content {
-    background: #1a1a3d;
-    border: 2px solid #7f5af0;
+    background: #2c3e50;
+    border: 2px solid #3f72af;
     padding: 30px;
     border-radius: 12px;
     width: 300px;
-    box-shadow: 0 0 20px #7f5af0, 0 0 40px #5a4fcf;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
     position: relative;
     animation: fadeIn 0.3s ease;
 }
 
 .modal-content h2 {
     margin-bottom: 20px;
+    color: #f5f5f5;
 }
 
 .modal-content input {
     width: 100%;
     margin: 10px 0;
     padding: 12px;
-    border: none;
-    border-radius: 8px;
-    background: #0f0f2d;
+    border: 1px solid #3f72af;
+    border-radius: 4px;
+    background: #1a1a1d;
     color: #fff;
     outline: none;
 }
 
 .generated-code {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     font-weight: bold;
-    color: #7f5af0;
-    text-shadow: 0 0 10px #7f5af0, 0 0 20px #5a4fcf;
+    color: #cf3d3d;
+    text-shadow: none;
     margin: 20px 0;
-    letter-spacing: 3px;
+    letter-spacing: 2px;
 }
 
 .error {
@@ -125,12 +148,11 @@ body {
     height: 20px;
 }
 
-/* Close button */
 .close {
     background: transparent;
     border: none;
     font-size: 1.5rem;
-    color: #fff;
+    color: #f5f5f5;
     position: absolute;
     top: 10px; right: 15px;
     cursor: pointer;
@@ -141,57 +163,21 @@ body {
     transform: rotate(90deg);
 }
 
-/* Animations */
 @keyframes fadeIn {
     from { opacity: 0; transform: scale(0.9); }
     to { opacity: 1; transform: scale(1); }
 }
 
-/*VIVE LA DECO mouhahah*/
-
-/* Lignes LED horizontales */
-.led-line {
-  width: 100%;
-  height: 4px;
-  background-color: #0ff;
-  box-shadow: 0 0 10px #0ff, 0 0 20px #0ff, 0 0 40px #0ff;
-  margin: 20px 0;
-  position: relative;
-  overflow: hidden;
-}
-
-.led-anim {
-  height: 4px;
-  background: linear-gradient(90deg, #0ff, #00f, #0ff);
-  background-size: 200% 100%;
-  animation: moveLight 2s linear infinite;
-}
-
-@keyframes moveLight {
-  0% {background-position: 200% 0;}
-  100% {background-position: -200% 0;}
-}
-
-/* Petites LED flottantes */
+.led-line,
+.led-anim,
 .led-dot {
-  width: 8px;
-  height: 8px;
-  background-color: #f0f;
-  border-radius: 50%;
-  box-shadow: 0 0 8px #f0f;
-  position: absolute;
-  animation: blink 1.5s infinite alternate;
+    display: none;
 }
 
-@keyframes blink {
-  0% {opacity: 0.2;}
-  100% {opacity: 1;}
+@media (max-width: 600px) {
+    .btn {
+        width: 80%;
+        margin: 10px auto;
+        display: block;
+    }
 }
-
-/* Exemple positionnement aléatoire des LEDs */
-.led-dot:nth-child(1) { top: 30px; left: 50px; animation-delay: 0s; }
-.led-dot:nth-child(2) { top: 80px; left: 150px; animation-delay: 0.5s; }
-.led-dot:nth-child(3) { top: 120px; left: 300px; animation-delay: 1s; }
-.led-dot:nth-child(4) { top: 170px; left: 450px; animation-delay: 1.5s; }
-.led-dot:nth-child(5) { top: 210px; left: 600px; animation-delay: 2s; }
-.led-dot:nth-child(6) { top: 260px; left: 850px; animation-delay: 2.5s; }
