@@ -1,4 +1,3 @@
-// ---- OPEN/CLOSE MODALS ----
 const createBtn = document.getElementById("createBtn");
 const joinBtn = document.getElementById("joinBtn");
 const createModal = document.getElementById("createModal");
@@ -6,7 +5,7 @@ const joinModal = document.getElementById("joinModal");
 const closes = document.querySelectorAll(".close");
 
 createBtn.addEventListener("click", () => {
-    // Génère un code et l'affiche
+    
     const code = generateRoomCode();
     document.getElementById("roomCodeDisplay").textContent = code;
     createModal.style.display = "flex";
@@ -21,7 +20,7 @@ closes.forEach(c => c.addEventListener("click", () => {
     joinModal.style.display = "none";
 }));
 
-// ---- FONCTION GÉNÉRATION CODE ----
+
 function generateRoomCode() {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     let code = "";
@@ -31,7 +30,6 @@ function generateRoomCode() {
     return code;
 }
 
-// ---- GESTION REJOINDRE ----
 document.getElementById("joinRoom").addEventListener("click", () => {
     const pseudo = document.getElementById("pseudo").value.trim();
     const roomCode = document.getElementById("roomCode").value.trim();
@@ -47,7 +45,11 @@ document.getElementById("joinRoom").addEventListener("click", () => {
     }
 
     error.textContent = "";
-    alert(`${pseudo} rejoint la room ${roomCode}`);
-    joinModal.style.display = "none";
-});
 
+    const encodedPseudo = encodeURIComponent(pseudo);
+    const encodedCode = encodeURIComponent(roomCode);
+    
+    const gameUrl = `jeu.html?pseudo=${encodedPseudo}&code=${encodedCode}`;
+    
+    window.location.href = gameUrl;
+});

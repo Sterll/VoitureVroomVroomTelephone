@@ -1,3 +1,14 @@
+const params = new URLSearchParams(window.location.search);
+const pseudo = params.get('pseudo');
+const roomCode = params.get('code');
+
+if (pseudo && roomCode) {
+    console.log(`Le joueur ${pseudo} a rejoint la salle ${roomCode}.`);
+} else {
+    console.warn("Paramètres de connexion (pseudo ou code) manquants.");
+}
+
+
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
@@ -5,153 +16,214 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 let carImg = new Image();
-carImg.src = "voitoure.png"; // image de voiture PNG avec fond transparent
+carImg.src = "voitoure.png";
 
-let cityImg = new Image();
-cityImg.src = "ville.png"; // Silhouette de ville
+let obstacleImg = new Image();
+obstacleImg.src = "pierro.png"; 
 
-let car = { 
-  x: 0, y: 0, w: 80, h: 120, speed: 8 
+let car = {
+    x: 0, y: 0, w: 80, h: 120, speed: 10
 };
 
 carImg.onload = () => {
-  const scale = 0.15; // échelle (15% de la taille d'origine par ex.)
-  car.w = carImg.width * scale;
-  car.h = carImg.height * scale;
-  car.x = canvas.width / 2 - car.w / 2;
-  car.y = canvas.height - car.h - 20;
+    const scale = 0.35;
+    car.w = carImg.width * scale;
+    car.h = carImg.height * scale;
+    car.x = canvas.width / 2 - car.w / 2;
+    car.y = canvas.height - car.h - 20;
 };
 
 let obstacles = [];
 let roadLines = [];
 let gameRunning = true;
-let horizonY = canvas.height / 3; // Position de la ville
 
-// Lignes de route
-for (let i = 0; i < 20; i++) {
-  roadLines.push({ x: canvas.width / 2 - 5, y: i * 80, w: 10, h: 40 });
+const roadWidth = canvas.width / 1.8; 
+const laneWidth = roadWidth / 5;
+
+const lineWidth = 10; 
+
+const roadLinesCenter = canvas.width / 2;
+const roadEdges = [
+    roadLinesCenter - roadWidth / 2, 
+    roadLinesCenter - laneWidth, 
+    roadLinesCenter, 
+    roadLinesCenter + laneWidth, 
+    roadLinesCenter + roadWidth / 2 
+];
+
+let lineSpacing = 60; 
+let lineLength = 30; 
+let lineCount = Math.ceil(canvas.height / lineSpacing) + 1;
+
+for (let i = 0; i < lineCount; i++) {
+    const yPos = i * lineSpacing - lineLength;
+    
+    roadLines.push({ 
+        x: roadEdges[0] - lineWidth / 2, 
+        y: yPos, 
+        w: lineWidth, 
+        h: lineLength * 2, 
+        isEdge: true
+    });
+    roadLines.push({ 
+        x: roadEdges[4] - lineWidth / 2, 
+        y: yPos, 
+        w: lineWidth, 
+        h: lineLength * 2,
+        isEdge: true
+    });
+    
+    roadLines.push({ 
+        x: roadEdges[2] - lineWidth / 2, 
+        y: yPos, 
+        w: lineWidth, 
+        h: lineLength,
+        isEdge: false
+    });
+
+    roadLines.push({ 
+        x: roadEdges[1] - lineWidth / 2, 
+        y: yPos, 
+        w: lineWidth, 
+        h: lineLength / 2, 
+        isEdge: false
+    });
+    roadLines.push({ 
+        x: roadEdges[3] - lineWidth / 2, 
+        y: yPos, 
+        w: lineWidth, 
+        h: lineLength / 2,
+        isEdge: false
+    });
 }
 
-// Dessiner horizon + ville
-function drawBackground() {
-  // Horizon
-  ctx.fillStyle = "#0ff";
-  ctx.fillRect(0, horizonY, canvas.width, 2);
 
-  // Silhouette de ville
-  ctx.drawImage(cityImg, 0, horizonY - 135, canvas.width, 150);
-}
-
-// Dessiner la route
 function drawRoad() {
-  ctx.fillStyle = "#0ff";
-  roadLines.forEach(line => {
-    if (line.y + line.h < horizonY) return; // n'affiche pas au-dessus de l’horizon
-    ctx.fillRect(line.x, line.y, line.w, line.h);
-  });
+    ctx.fillStyle = "#ffffff";
+
+    roadLines.forEach(line => {
+        ctx.fillStyle = line.isEdge ? "#8d99ae" : "#ffffff";
+        ctx.fillRect(line.x, line.y, line.w, line.h);
+    });
 }
 
-// Mise à jour des lignes
-roadLines.forEach(line => {
-  line.y += 10;
-  if (line.y > canvas.height) line.y = -40;
-});
 
-// Dessiner obstacles
 function drawObstacles() {
-  ctx.fillStyle = "#ff1f4d";
-  obstacles.forEach(o => ctx.fillRect(o.x, o.y, o.w, o.h));
+    obstacles.forEach(o => ctx.drawImage(obstacleImg, o.x, o.y, o.w, o.h));
 }
 
-// Dessiner voiture
+
 function drawCar() {
-  ctx.drawImage(carImg, car.x, car.y, car.w, car.h);
+    ctx.drawImage(carImg, car.x, car.y, car.w, car.h);
 }
 
-// Générer obstacle
+
 function spawnObstacle() {
-  const laneWidth = canvas.width / 3;
-  const lane = Math.floor(Math.random() * 3);
-  obstacles.push({ x: lane * laneWidth + laneWidth / 2 - 25, y: horizonY, w: 50, h: 100 });
-}
-
-// Boucle du jeu
-function update() {
-  if (!gameRunning) return;
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // 1. Fond
-  ctx.fillStyle = "#081040";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  // 2. Route (pointillés)
-  roadLines.forEach(line => {
-    line.y += 10;
-    if (line.y > canvas.height) line.y = -40;
-  });
-  drawRoad();
-
-  // 3. Obstacles (au-dessus de la route, mais sous la ville)
-  obstacles.forEach(o => o.y += 6);
-  obstacles = obstacles.filter(o => o.y < canvas.height + 100);
-  drawObstacles();
-
-  // 4. Ville (recouvre la route au fond, mais pas la voiture)
-  drawBackground();
-
-  // 5. Collision check (sur les vraies positions, peu importe l’ordre visuel)
-  obstacles.forEach(o => {
-    if (car.x < o.x + o.w &&
-        car.x + car.w > o.x &&
-        car.y < o.y + o.h &&
-        car.y + car.h > o.y) {
-      gameOver();
+    const MAX_OBSTACLES = 2;
+    if (obstacles.length >= MAX_OBSTACLES) {
+        return; 
     }
-  });
 
-  // 6. Voiture (au-dessus de tout)
-  drawCar();
+    const laneIndex = 1 + Math.floor(Math.random() * 3); 
+    const laneMidX = (roadEdges[laneIndex] + roadEdges[laneIndex + 1]) / 2;
+    const obstacleX = laneMidX - 45; 
+    
+    obstacles.push({ x: obstacleX, y: -130, w: 90, h: 130 }); 
+}
 
-  requestAnimationFrame(update);
+function update() {
+    if (!gameRunning) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "#2c3e50"; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "#343a40"; 
+    const roadStartX = roadLinesCenter - roadWidth / 2;
+    ctx.fillRect(roadStartX, 0, roadWidth, canvas.height);
+
+    roadLines.forEach(line => {
+        line.y += 15;
+        if (line.y > canvas.height) { 
+            line.y -= (lineCount * lineSpacing); 
+        }
+    });
+    
+    drawRoad();
+
+    obstacles.forEach(o => o.y += 10);
+    obstacles = obstacles.filter(o => o.y < canvas.height + 100); 
+    drawObstacles();
+
+    obstacles.forEach(o => {
+        if (car.x < o.x + o.w &&
+            car.x + car.w > o.x &&
+            car.y < o.y + o.h &&
+            car.y + car.h > o.y) {
+            gameOver();
+        }
+    });
+
+    drawCar();
+
+    requestAnimationFrame(update);
 }
 
 
-// Contrôles clavier
 document.addEventListener("keydown", e => {
-  if (!gameRunning) return;
-  if (e.key === "ArrowLeft" && car.x > 0) car.x -= car.speed * 2;
-  if (e.key === "ArrowRight" && car.x + car.w < canvas.width) car.x += car.speed * 2;
+    if (!gameRunning) return;
+    
+    const maxLeft = roadEdges[0];
+    const maxRight = roadEdges[4] - car.w; 
+    
+    if (e.key === "ArrowLeft") {
+        car.x = Math.max(car.x - car.speed * 2, maxLeft);
+    }
+    if (e.key === "ArrowRight") {
+        car.x = Math.min(car.x + car.speed * 2, maxRight);
+    }
 });
 
-// Contrôle gyroscope (mobile)
 window.addEventListener("deviceorientation", event => {
-  if (!gameRunning) return;
-  const gamma = event.gamma;
-  if (gamma < -10 && car.x > 0) car.x -= car.speed;
-  if (gamma > 10 && car.x + car.w < canvas.width) car.x += car.speed;
+    if (!gameRunning) return;
+    const gamma = event.gamma;
+    
+    const maxLeft = roadEdges[0];
+    const maxRight = roadEdges[4] - car.w;
+
+    if (gamma < -10) {
+        car.x = Math.max(car.x - car.speed, maxLeft);
+    }
+    if (gamma > 10) {
+        car.x = Math.min(car.x + car.speed, maxRight);
+    }
 });
 
-// Spawn obstacles
 setInterval(() => {
-  if (gameRunning) spawnObstacle();
-}, 2000);
+    if (gameRunning) spawnObstacle();
+}, 1500);
 
-// Game Over
 function gameOver() {
-  gameRunning = false;
-  document.getElementById("gameOver").style.display = "block";
+    gameRunning = false;
+    const gameOverElement = document.getElementById("gameOver");
+    if (gameOverElement) {
+        gameOverElement.style.display = "block";
+    } else {
+        console.log("Jeu terminé !");
+    }
 }
 
-// Restart
 function restartGame() {
-  car.x = canvas.width / 2 - 40;
-  car.y = canvas.height - 140;
-  obstacles = [];
-  gameRunning = true;
-  document.getElementById("gameOver").style.display = "none";
-  update();
+    car.x = canvas.width / 2 - car.w / 2;
+    car.y = canvas.height - car.h - 20;
+    obstacles = [];
+    gameRunning = true;
+    const gameOverElement = document.getElementById("gameOver");
+    if (gameOverElement) {
+        gameOverElement.style.display = "none";
+    }
+    update();
 }
 
-// Démarrage
 update();
