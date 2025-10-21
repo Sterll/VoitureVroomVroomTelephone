@@ -9,9 +9,13 @@ const io = socketIO(server);
 
 const PORT = process.env.PORT || 3000;
 
+// Middleware pour parser le JSON
+app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, '../site'))); // Servir les fichiers du site
 
 const rooms = new Map();
+const scores = new Map(); // Stockage des scores par salle
 
 function generateRoomCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -32,12 +36,85 @@ function cleanupRooms() {
     for (const [code, room] of rooms.entries()) {
         if (room.players.length === 0 || (now - room.createdAt) > TWO_HOURS) {
             rooms.delete(code);
+            scores.delete(code); // Nettoyer aussi les scores
             console.log(`Salle ${code} supprimée (vide ou expirée)`);
         }
     }
 }
 
 setInterval(cleanupRooms, 30 * 60 * 1000);
+
+// Routes pour les scores
+app.post('/api/score', (req, res) => {
+    const { pseudo, roomCode, score, survivalTime, timestamp } = req.body;
+    
+    if (!pseudo || !roomCode || score === undefined || survivalTime === undefined) {
+        return res.status(400).json({ error: 'Données manquantes' });
+    }
+    
+    // Vérifier que la salle existe
+    const room = rooms.get(roomCode);
+    if (!room) {
+        return res.status(404).json({ error: 'Salle introuvable' });
+    }
+    
+    // Initialiser les scores de la salle si nécessaire
+    if (!scores.has(roomCode)) {
+        scores.set(roomCode, []);
+    }
+    
+    const roomScores = scores.get(roomCode);
+    
+    // Ajouter le nouveau score
+    const newScore = {
+        pseudo,
+        score,
+        survivalTime,
+        timestamp,
+        date: new Date().toISOString()
+    };
+    
+    roomScores.push(newScore);
+    
+    // Trier les scores par ordre décroissant
+    roomScores.sort((a, b) => b.score - a.score);
+    
+    // Garder seulement les 10 meilleurs scores
+    if (roomScores.length > 10) {
+        roomScores.splice(10);
+    }
+    
+    console.log(`Score reçu: ${pseudo} - ${score} points (${survivalTime}s) dans la salle ${roomCode}`);
+    
+    // Diffuser le nouveau score à tous les joueurs de la salle
+    io.to(roomCode).emit('newScore', {
+        pseudo,
+        score,
+        survivalTime,
+        leaderboard: roomScores
+    });
+    
+    res.json({ success: true, leaderboard: roomScores });
+});
+
+app.get('/api/scores/:roomCode', (req, res) => {
+    const { roomCode } = req.params;
+    
+    const room = rooms.get(roomCode);
+    if (!room) {
+        return res.status(404).json({ error: 'Salle introuvable' });
+    }
+    
+    const roomScores = scores.get(roomCode) || [];
+    res.json({ scores: roomScores });
+});
+
+app.get('/api/leaderboard/:roomCode', (req, res) => {
+    const { roomCode } = req.params;
+    
+    const roomScores = scores.get(roomCode) || [];
+    res.json({ leaderboard: roomScores });
+});
 
 io.on('connection', (socket) => {
     console.log('Un utilisateur s\'est connecté:', socket.id);
@@ -200,6 +277,7 @@ io.on('connection', (socket) => {
 
         if (room.players.length === 0) {
             rooms.delete(playerRoom);
+            scores.delete(playerRoom); // Nettoyer aussi les scores
             console.log(`Salle ${playerRoom} supprimée (vide)`);
             return;
         }

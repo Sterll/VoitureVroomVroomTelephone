@@ -37,6 +37,15 @@ let obstacles = [];
 let roadLines = [];
 let gameRunning = true;
 
+let score = 0;
+let gameStartTime = Date.now();
+let lastScoreUpdate = Date.now();
+
+const scoreElement = document.getElementById("currentScore");
+const timeElement = document.getElementById("timeDisplay");
+const finalScoreElement = document.getElementById("finalScore");
+const finalTimeElement = document.getElementById("finalTime");
+
 const roadWidth = canvas.width / 1.8; 
 const laneWidth = roadWidth / 5;
 
@@ -156,6 +165,7 @@ function update() {
     obstacles = obstacles.filter(o => o.y < canvas.height + 100); 
     drawObstacles();
 
+    // Vérification des collisions
     obstacles.forEach(o => {
         if (car.x < o.x + o.w &&
             car.x + car.w > o.x &&
@@ -165,6 +175,9 @@ function update() {
         }
     });
 
+    // Mise à jour du score
+    updateScore();
+    
     drawCar();
 
     requestAnimationFrame(update);
@@ -204,8 +217,70 @@ setInterval(() => {
     if (gameRunning) spawnObstacle();
 }, 1500);
 
+// Fonction de mise à jour du score
+function updateScore() {
+    const currentTime = Date.now();
+    const elapsedTime = Math.floor((currentTime - gameStartTime) / 1000);
+    
+    // Augmentation du score basée sur le temps de survie (10 points par seconde)
+    if (currentTime - lastScoreUpdate >= 100) { // Mise à jour toutes les 100ms
+        score += 1;
+        lastScoreUpdate = currentTime;
+    }
+    
+    // Bonus pour éviter les obstacles
+    obstacles.forEach(obstacle => {
+        if (!obstacle.passed && obstacle.y > car.y + car.h) {
+            obstacle.passed = true;
+            score += 50; // Bonus pour avoir évité un obstacle
+        }
+    });
+    
+    // Mise à jour de l'affichage
+    if (scoreElement) scoreElement.textContent = `Score: ${score}`;
+    if (timeElement) timeElement.textContent = `Temps: ${elapsedTime}s`;
+}
+
+// Fonction pour envoyer le score au serveur
+async function sendScoreToServer(finalScore, survivalTime) {
+    try {
+        const response = await fetch('/api/score', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                pseudo: pseudo,
+                roomCode: roomCode,
+                score: finalScore,
+                survivalTime: survivalTime,
+                timestamp: Date.now()
+            })
+        });
+        
+        if (response.ok) {
+            console.log('Score envoyé avec succès au serveur');
+        } else {
+            console.error('Erreur lors de l\'envoi du score');
+        }
+    } catch (error) {
+        console.error('Erreur réseau lors de l\'envoi du score:', error);
+    }
+}
+
 function gameOver() {
     gameRunning = false;
+    
+    // Calcul du temps de survie
+    const survivalTime = Math.floor((Date.now() - gameStartTime) / 1000);
+    
+    // Envoi du score au serveur
+    sendScoreToServer(score, survivalTime);
+    
+    // Affichage du score final
+    if (finalScoreElement) finalScoreElement.textContent = `Score final: ${score}`;
+    if (finalTimeElement) finalTimeElement.textContent = `Temps de survie: ${survivalTime}s`;
+    
     const gameOverElement = document.getElementById("gameOver");
     if (gameOverElement) {
         gameOverElement.style.display = "block";
@@ -215,15 +290,39 @@ function gameOver() {
 }
 
 function restartGame() {
+    // Réinitialisation de la voiture
     car.x = canvas.width / 2 - car.w / 2;
     car.y = canvas.height - car.h - 20;
+    
+    // Réinitialisation du jeu
     obstacles = [];
     gameRunning = true;
+    
+    // Réinitialisation du score
+    score = 0;
+    gameStartTime = Date.now();
+    lastScoreUpdate = Date.now();
+    
+    // Mise à jour de l'affichage
+    if (scoreElement) scoreElement.textContent = `Score: 0`;
+    if (timeElement) timeElement.textContent = `Temps: 0s`;
+    
+    // Masquer l'écran de game over
     const gameOverElement = document.getElementById("gameOver");
     if (gameOverElement) {
         gameOverElement.style.display = "none";
     }
+    
     update();
+}
+
+// Fonction pour voir le classement
+function viewLeaderboard() {
+    if (pseudo && roomCode) {
+        window.location.href = `leaderboard.html?pseudo=${encodeURIComponent(pseudo)}&code=${encodeURIComponent(roomCode)}`;
+    } else {
+        alert('Informations de connexion manquantes');
+    }
 }
 
 update();
