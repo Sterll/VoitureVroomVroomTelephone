@@ -8,21 +8,10 @@
 </head>
 <body>
   <canvas id="gameCanvas"></canvas>
-  
-  <!-- Affichage du score -->
-  <div id="scoreDisplay">
-    <div id="currentScore">Score: 0</div>
-    <div id="timeDisplay">Temps: 0s</div>
-  </div>
 
   <div id="gameOver">
     <h1>Game Over</h1>
-    <div id="finalScore">Score final: 0</div>
-    <div id="finalTime">Temps de survie: 0s</div>
-    <div class="game-over-buttons">
-      <button onclick="restartGame()">Rejouer</button>
-      <button onclick="viewLeaderboard()" class="leaderboard-btn">🏆 Classement</button>
-    </div>
+    <button onclick="restartGame()">Rejouer</button>
   </div>
 
   <script src="game.js"></script>
