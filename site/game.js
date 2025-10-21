@@ -120,15 +120,19 @@ function drawCar() {
 
 function spawnObstacle() {
     const MAX_OBSTACLES = 2;
-    if (obstacles.length >= MAX_OBSTACLES) {
-        return; 
-    }
+    if (obstacles.length >= MAX_OBSTACLES) return;
 
-    const laneIndex = 1 + Math.floor(Math.random() * 3); 
-    const laneMidX = (roadEdges[laneIndex] + roadEdges[laneIndex + 1]) / 2;
-    const obstacleX = laneMidX - 45; 
-    
-    obstacles.push({ x: obstacleX, y: -130, w: 90, h: 130 }); 
+    // 3 voies possibles : gauche, centre, droite
+    const laneMids = [
+        (roadEdges[0] + roadEdges[1]) / 2, // voie gauche
+        (roadEdges[1] + roadEdges[3]) / 2, // voie centrale
+        (roadEdges[3] + roadEdges[4]) / 2  // voie droite
+    ];
+
+    const laneIndex = Math.floor(Math.random() * laneMids.length);
+    const obstacleX = laneMids[laneIndex] - 45;
+
+    obstacles.push({ x: obstacleX, y: -130, w: 90, h: 130 });
 }
 
 function update() {
@@ -178,10 +182,10 @@ document.addEventListener("keydown", e => {
     const maxRight = roadEdges[4] - car.w; 
     
     if (e.key === "ArrowLeft") {
-        car.x = Math.max(car.x - car.speed * 2, maxLeft);
+        car.x = Math.max(car.x - car.speed * 3, maxLeft);
     }
     if (e.key === "ArrowRight") {
-        car.x = Math.min(car.x + car.speed * 2, maxRight);
+        car.x = Math.min(car.x + car.speed * 3, maxRight);
     }
 });
 
