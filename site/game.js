@@ -1,3 +1,4 @@
+
 const params = new URLSearchParams(window.location.search);
 const pseudo = params.get('pseudo');
 const roomCode = params.get('code');
@@ -97,7 +98,10 @@ for (let i = 0; i < lineCount; i++) {
     });
 }
 
-
+/**
+ * Fait le dessin de la route
+ * @returns {void}
+ */
 function drawRoad() {
     ctx.fillStyle = "#ffffff";
 
@@ -107,17 +111,26 @@ function drawRoad() {
     });
 }
 
-
+/**
+ * Fait le dessin des obstacles
+ * @returns {void}
+ */
 function drawObstacles() {
     obstacles.forEach(o => ctx.drawImage(obstacleImg, o.x, o.y, o.w, o.h));
 }
 
-
+/**
+ * Fait le dessin du voiture
+ * @returns {void}
+ */
 function drawCar() {
     ctx.drawImage(carImg, car.x, car.y, car.w, car.h);
 }
 
-
+/**
+ * Fait spawn les obtacles
+ * @returns {void}
+ */
 function spawnObstacle() {
     const MAX_OBSTACLES = 2;
     if (obstacles.length >= MAX_OBSTACLES) return;
@@ -135,6 +148,10 @@ function spawnObstacle() {
     obstacles.push({ x: obstacleX, y: -130, w: 90, h: 130 });
 }
 
+/**
+ * Met à jour l'affichage du jeu et des obstacles
+ * @return {void}
+ */
 function update() {
     if (!gameRunning) return;
 
@@ -208,6 +225,10 @@ setInterval(() => {
     if (gameRunning) spawnObstacle();
 }, 1500);
 
+/**
+ * Terminer le jeu en affichant l'élément HTML #gameOver
+ * @return {void}
+ */
 function gameOver() {
     gameRunning = false;
     const gameOverElement = document.getElementById("gameOver");
@@ -218,6 +239,11 @@ function gameOver() {
     }
 }
 
+/**
+ * Redémarrer le jeu
+ * Réinitialise les positions du voiture et des obstacles, puis relance le jeu
+ * @return {void}
+ */
 function restartGame() {
     car.x = canvas.width / 2 - car.w / 2;
     car.y = canvas.height - car.h - 20;

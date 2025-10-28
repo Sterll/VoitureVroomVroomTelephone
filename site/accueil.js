@@ -21,6 +21,10 @@ closes.forEach(c => c.addEventListener("click", () => {
 }));
 
 
+/**
+ * Generates a 6-character room code.
+ * @returns {string} A 6-character room code.
+ */
 function generateRoomCode() {
     const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
     let code = "";
@@ -29,6 +33,7 @@ function generateRoomCode() {
     }
     return code;
 }
+
 
 document.getElementById("joinRoom").addEventListener("click", () => {
     const pseudo = document.getElementById("pseudo").value.trim();
@@ -49,7 +54,7 @@ document.getElementById("joinRoom").addEventListener("click", () => {
     const encodedPseudo = encodeURIComponent(pseudo);
     const encodedCode = encodeURIComponent(roomCode);
     
-    const gameUrl = `jeu.html?pseudo=${encodedPseudo}&code=${encodedCode}`;
+    const gameUrl = `game.html?pseudo=${encodedPseudo}&code=${encodedCode}`;
     
     window.location.href = gameUrl;
 });
