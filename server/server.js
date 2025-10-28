@@ -13,6 +13,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 const rooms = new Map();
 
+
 function generateRoomCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code;
