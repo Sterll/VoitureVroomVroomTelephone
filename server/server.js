@@ -7,9 +7,10 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 
-app.use(express.static(path.join(__dirname, 'public')));
+// Servir les fichiers statiques depuis le dossier 'site'
+app.use(express.static(path.join(__dirname, '..', 'site')));
 
 const rooms = new Map();
 
@@ -64,7 +65,8 @@ io.on('connection', (socket) => {
             players: [{
                 id: socket.id,
                 username: username.trim(),
-                isHost: true
+                isHost: true,
+                isController: false
             }],
             createdAt: Date.now(),
             gameStarted: false
@@ -83,7 +85,7 @@ io.on('connection', (socket) => {
     });
 
     socket.on('joinRoom', (data) => {
-        const { roomCode, username } = data;
+        const { roomCode, username, isController } = data;
 
         if (!roomCode || !username || username.trim() === '') {
             socket.emit('error', { message: 'Le code de salle et le pseudo sont requis' });
@@ -111,13 +113,14 @@ io.on('connection', (socket) => {
         const player = {
             id: socket.id,
             username: username.trim(),
-            isHost: false
+            isHost: false,
+            isController: isController || false
         };
 
         room.players.push(player);
         socket.join(roomCode.toUpperCase());
 
-        console.log(`${username} (${socket.id}) a rejoint la salle ${roomCode}`);
+        console.log(`${username} (${socket.id}) a rejoint la salle ${roomCode} ${isController ? '(manette)' : '(écran)'}`);
 
         socket.emit('roomJoined', {
             roomCode: roomCode.toUpperCase(),
@@ -129,7 +132,26 @@ io.on('connection', (socket) => {
         socket.to(roomCode.toUpperCase()).emit('playerJoined', {
             username: username.trim(),
             playerId: socket.id,
-            players: room.players
+            players: room.players,
+            isController: isController || false
+        });
+    });
+
+    // Recevoir les données gyroscope de la manette et les transmettre au jeu
+    socket.on('gyroscope', (data) => {
+        const { roomCode, gamma, beta, username } = data;
+
+        if (!roomCode) return;
+
+        const room = rooms.get(roomCode.toUpperCase());
+        if (!room) return;
+
+        // Transmettre les données gyroscope à tous les autres dans la room (le PC)
+        socket.to(roomCode.toUpperCase()).emit('gyroscopeData', {
+            playerId: socket.id,
+            username: username,
+            gamma: gamma,
+            beta: beta
         });
     });
 
@@ -159,8 +181,10 @@ io.on('connection', (socket) => {
             return;
         }
 
-        if (room.players.length < 2) {
-            socket.emit('error', { message: 'Il faut au moins 2 joueurs pour commencer' });
+        // Permettre de jouer avec au moins 1 manette
+        const controllers = room.players.filter(p => p.isController);
+        if (controllers.length < 1) {
+            socket.emit('error', { message: 'Il faut au moins 1 manette connectée pour commencer' });
             return;
         }
 

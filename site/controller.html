@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Vrouuum - Manette</title>
+    <link rel="stylesheet" href="controller.css">
+</head>
+<body>
+    <div class="container" id="joinScreen">
+        <h1 class="title">🎮 Manette</h1>
+        <p class="subtitle">Rejoignez une partie</p>
+
+        <div class="form">
+            <input type="text" id="pseudo" placeholder="Votre pseudo" maxlength="15">
+            <input type="text" id="roomCode" placeholder="Code de la room" maxlength="6" style="text-transform: uppercase;">
+            <button id="joinBtn" class="btn neon">Rejoindre</button>
+            <p id="error" class="error"></p>
+        </div>
+    </div>
+
+    <div class="container hidden" id="waitingScreen">
+        <h1 class="title">⏳ En attente</h1>
+        <p class="room-code">Room: <span id="displayRoomCode"></span></p>
+        <p class="player-name">Joueur: <span id="displayPseudo"></span></p>
+        <p class="info">En attente du lancement de la partie par l'hôte...</p>
+        <div class="players-list">
+            <h3>Joueurs connectés:</h3>
+            <ul id="playersList"></ul>
+        </div>
+    </div>
+
+    <div class="container hidden" id="controllerScreen">
+        <div class="controller-display">
+            <h2 id="controllerPseudo"></h2>
+            <div class="gyro-visual">
+                <div class="car-indicator" id="carIndicator">🚗</div>
+            </div>
+            <div class="gyro-info">
+                <p>Inclinaison: <span id="gammaValue">0</span>°</p>
+            </div>
+            <p class="instruction">Inclinez votre téléphone pour diriger la voiture!</p>
+            <p class="instruction small">← Gauche | Droite →</p>
+        </div>
+    </div>
+
+    <div class="modal hidden" id="permissionModal">
+        <div class="modal-content">
+            <h2>📱 Permission requise</h2>
+            <p>Pour utiliser le gyroscope comme manette, vous devez autoriser l'accès aux capteurs de mouvement.</p>
+            <button id="requestPermissionBtn" class="btn neon">Autoriser</button>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="controller.js"></script>
+</body>
+</html>
