@@ -58,44 +58,15 @@ let lineCount = Math.ceil(canvas.height / lineSpacing) + 1;
 
 for (let i = 0; i < lineCount; i++) {
     const yPos = i * lineSpacing - lineLength;
-    
-    roadLines.push({ 
-        x: roadEdges[0] - lineWidth / 2, 
-        y: yPos, 
-        w: lineWidth, 
-        h: lineLength * 2, 
-        isEdge: true
-    });
-    roadLines.push({ 
-        x: roadEdges[4] - lineWidth / 2, 
-        y: yPos, 
-        w: lineWidth, 
-        h: lineLength * 2,
-        isEdge: true
-    });
-    
-    roadLines.push({ 
-        x: roadEdges[2] - lineWidth / 2, 
-        y: yPos, 
-        w: lineWidth, 
-        h: lineLength,
-        isEdge: false
-    });
-
-    roadLines.push({ 
-        x: roadEdges[1] - lineWidth / 2, 
-        y: yPos, 
-        w: lineWidth, 
-        h: lineLength / 2, 
-        isEdge: false
-    });
-    roadLines.push({ 
-        x: roadEdges[3] - lineWidth / 2, 
-        y: yPos, 
-        w: lineWidth, 
-        h: lineLength / 2,
-        isEdge: false
-    });
+    for (let i = 0; i < 5; i++) {
+        roadLines.push({ 
+            x: roadEdges[i] - lineWidth / 2, 
+            y: yPos, 
+            w: lineWidth, 
+            h: lineLength, 
+            isEdge: false
+        });
+    }
 }
 
 /**

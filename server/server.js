@@ -14,15 +14,22 @@ app.use(express.static(path.join(__dirname, 'public')));
 const rooms = new Map();
 
 
+/**
+ * Generates a random 6-character room code.
+ * @returns {string} A 6-character room code.
+ */
 function generateRoomCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code;
     do {
+        // Reset the code
         code = '';
+        // Generate a random 6-character code
         for (let i = 0; i < 6; i++) {
             code += chars.charAt(Math.floor(Math.random() * chars.length));
         }
     } while (rooms.has(code));
+    // Return the generated code if it's not already in use
     return code;
 }
 
