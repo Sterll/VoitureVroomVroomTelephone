@@ -329,6 +329,27 @@ setInterval(() => {
     if (gameRunning) spawnObstacle();
 }, 1500);
 
+// Créer un joueur local pour le mode solo/test (contrôle clavier)
+const localPlayer = new Player('local', pseudo || 'Joueur', '#cf3d3d');
+players.set('local', localPlayer);
+
+// Contrôles clavier pour le joueur local
+document.addEventListener("keydown", e => {
+    if (!gameRunning) return;
+    const player = players.get('local');
+    if (!player || !player.alive) return;
+
+    const maxLeft = roadEdges[0];
+    const maxRight = roadEdges[4] - player.w;
+
+    if (e.key === "ArrowLeft") {
+        player.targetX = Math.max(player.x - player.speed * 5, maxLeft);
+    }
+    if (e.key === "ArrowRight") {
+        player.targetX = Math.min(player.x + player.speed * 5, maxRight);
+    }
+});
+
 // Démarrer le jeu
 console.log(`Jeu démarré - Room: ${roomCode}, Host: ${pseudo}`);
 update();
