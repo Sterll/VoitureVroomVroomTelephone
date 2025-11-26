@@ -1,60 +1,139 @@
+// Connexion Socket.io
+const socket = io();
+
+// Éléments DOM
 const createBtn = document.getElementById("createBtn");
-const joinBtn = document.getElementById("joinBtn");
 const createModal = document.getElementById("createModal");
-const joinModal = document.getElementById("joinModal");
+const lobbyModal = document.getElementById("lobbyModal");
 const closes = document.querySelectorAll(".close");
 
+const hostPseudoInput = document.getElementById("hostPseudo");
+const createRoomBtn = document.getElementById("createRoom");
+const createError = document.getElementById("createError");
+
+const roomCodeDisplay = document.getElementById("roomCodeDisplay");
+const playersList = document.getElementById("playersList");
+const startGameBtn = document.getElementById("startGameBtn");
+const startInfo = document.getElementById("startInfo");
+
+// Variables
+let currentRoomCode = '';
+let currentPseudo = '';
+
+// Ouvrir modal création
 createBtn.addEventListener("click", () => {
-    
-    const code = generateRoomCode();
-    document.getElementById("roomCodeDisplay").textContent = code;
     createModal.style.display = "flex";
 });
 
-joinBtn.addEventListener("click", () => {
-    joinModal.style.display = "flex";
-});
-
+// Fermer les modals
 closes.forEach(c => c.addEventListener("click", () => {
     createModal.style.display = "none";
-    joinModal.style.display = "none";
+    // Ne pas fermer le lobby si on est dedans
 }));
 
-
-/**
- * Generates a 6-character room code.
- * @returns {string} A 6-character room code.
- */
-function generateRoomCode() {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    let code = "";
-    for (let i = 0; i < 6; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return code;
-}
-
-
-document.getElementById("joinRoom").addEventListener("click", () => {
-    const pseudo = document.getElementById("pseudo").value.trim();
-    const roomCode = document.getElementById("roomCode").value.trim();
-    const error = document.getElementById("joinError");
+// Créer une room
+createRoomBtn.addEventListener("click", () => {
+    const pseudo = hostPseudoInput.value.trim();
 
     if (!pseudo) {
-        error.textContent = "Pseudo obligatoire";
-        return;
-    }
-    if (!roomCode) {
-        error.textContent = "Code room requis";
+        createError.textContent = "Pseudo obligatoire";
         return;
     }
 
-    error.textContent = "";
+    createError.textContent = "";
+    currentPseudo = pseudo;
 
-    const encodedPseudo = encodeURIComponent(pseudo);
-    const encodedCode = encodeURIComponent(roomCode);
-    
-    const gameUrl = `game.html?pseudo=${encodedPseudo}&code=${encodedCode}`;
-    
-    window.location.href = gameUrl;
+    socket.emit('createRoom', { username: pseudo });
+});
+
+// Room créée avec succès
+socket.on('roomCreated', (data) => {
+    console.log('Room créée:', data);
+    currentRoomCode = data.roomCode;
+
+    roomCodeDisplay.textContent = data.roomCode;
+    updatePlayersList([{ username: data.username, isHost: true, isController: false }]);
+
+    createModal.style.display = "none";
+    lobbyModal.style.display = "flex";
+});
+
+// Un joueur rejoint
+socket.on('playerJoined', (data) => {
+    console.log('Joueur rejoint:', data.username, data.isController ? '(manette)' : '(écran)');
+    updatePlayersList(data.players);
+    checkCanStart(data.players);
+});
+
+// Un joueur quitte
+socket.on('playerLeft', (data) => {
+    console.log('Joueur parti:', data.username);
+    updatePlayersList(data.players);
+    checkCanStart(data.players);
+});
+
+// Erreur du serveur
+socket.on('error', (data) => {
+    createError.textContent = data.message;
+});
+
+// Partie démarrée
+socket.on('gameStarted', (data) => {
+    console.log('Partie démarrée!', data);
+    // Rediriger vers la page de jeu avec les infos
+    const params = new URLSearchParams({
+        pseudo: currentPseudo,
+        code: currentRoomCode,
+        isHost: 'true'
+    });
+    window.location.href = `game.html?${params.toString()}`;
+});
+
+// Mettre à jour la liste des joueurs
+function updatePlayersList(players) {
+    playersList.innerHTML = '';
+    players.forEach(player => {
+        const li = document.createElement('li');
+
+        let icon = '👤';
+        let type = '';
+        if (player.isHost) {
+            icon = '👑';
+            type = '(Hôte - PC)';
+        } else if (player.isController) {
+            icon = '🎮';
+            type = '(Manette)';
+        }
+
+        li.innerHTML = `${icon} ${player.username} <span class="player-type">${type}</span>`;
+        playersList.appendChild(li);
+    });
+}
+
+// Vérifier si on peut démarrer
+function checkCanStart(players) {
+    const controllers = players.filter(p => p.isController);
+    const canStart = controllers.length >= 1;
+
+    startGameBtn.disabled = !canStart;
+
+    if (canStart) {
+        startInfo.textContent = `${controllers.length} manette(s) connectée(s) - Prêt!`;
+        startInfo.style.color = '#4caf50';
+    } else {
+        startInfo.textContent = 'En attente d\'au moins 1 manette...';
+        startInfo.style.color = '#8d99ae';
+    }
+}
+
+// Démarrer la partie
+startGameBtn.addEventListener('click', () => {
+    socket.emit('startGame', { roomCode: currentRoomCode });
+});
+
+// Déconnexion propre
+window.addEventListener('beforeunload', () => {
+    if (currentRoomCode) {
+        socket.emit('leaveRoom', { roomCode: currentRoomCode });
+    }
 });
