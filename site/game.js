@@ -233,14 +233,11 @@ function spawnObstacle() {
 
     if (obstacles.length >= Math.min(MAX_OBSTACLES, 5)) return;
 
-    const laneMids = [
-        (roadEdges[0] + roadEdges[1]) / 2,
-        (roadEdges[1] + roadEdges[3]) / 2,
-        (roadEdges[3] + roadEdges[4]) / 2
-    ];
+    const obstacleWidth = 90;
+    const minX = roadEdges[0];
+    const maxX = roadEdges[4] - obstacleWidth;
 
-    const laneIndex = Math.floor(Math.random() * laneMids.length);
-    const obstacleX = laneMids[laneIndex] - 45;
+    const obstacleX = minX + Math.random() * (maxX - minX);
 
     obstacles.push({ x: obstacleX, y: -130, w: 90, h: 130 });
 }
