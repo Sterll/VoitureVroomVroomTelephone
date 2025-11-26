@@ -1,11 +1,8 @@
-// Connexion Socket.io
 const socket = io();
 
-// Éléments DOM
 const joinScreen = document.getElementById('joinScreen');
 const waitingScreen = document.getElementById('waitingScreen');
 const controllerScreen = document.getElementById('controllerScreen');
-const permissionModal = document.getElementById('permissionModal');
 
 const pseudoInput = document.getElementById('pseudo');
 const roomCodeInput = document.getElementById('roomCode');
@@ -17,21 +14,20 @@ const displayPseudo = document.getElementById('displayPseudo');
 const playersList = document.getElementById('playersList');
 
 const controllerPseudo = document.getElementById('controllerPseudo');
-const carIndicator = document.getElementById('carIndicator');
-const gammaValue = document.getElementById('gammaValue');
-const requestPermissionBtn = document.getElementById('requestPermissionBtn');
+const directionValue = document.getElementById('directionValue');
+const btnLeft = document.getElementById('btnLeft');
+const btnRight = document.getElementById('btnRight');
+const btnUp = document.getElementById('btnUp');
+const btnDown = document.getElementById('btnDown');
 
-// Variables
 let currentRoomCode = '';
 let currentPseudo = '';
-let gyroscopeActive = false;
+let currentDirection = 0;
 
-// Auto uppercase pour le code room
 roomCodeInput.addEventListener('input', (e) => {
     e.target.value = e.target.value.toUpperCase();
 });
 
-// Rejoindre une room
 joinBtn.addEventListener('click', () => {
     const pseudo = pseudoInput.value.trim();
     const roomCode = roomCodeInput.value.trim().toUpperCase();
@@ -46,10 +42,8 @@ joinBtn.addEventListener('click', () => {
     }
 
     errorEl.textContent = '';
-    currentPseudo = pseudo;
-    currentRoomCode = roomCode;
+    console.log(`Tentative de rejoindre: Room=${roomCode}, Pseudo=${pseudo}`);
 
-    // Rejoindre comme manette (isController: true)
     socket.emit('joinRoom', {
         roomCode: roomCode,
         username: pseudo,
@@ -57,9 +51,11 @@ joinBtn.addEventListener('click', () => {
     });
 });
 
-// Réponses du serveur
 socket.on('roomJoined', (data) => {
     console.log('Room rejointe:', data);
+    currentRoomCode = data.roomCode;
+    currentPseudo = data.username;
+
     displayRoomCode.textContent = data.roomCode;
     displayPseudo.textContent = data.username;
     updatePlayersList(data.players);
@@ -88,11 +84,9 @@ socket.on('gameStarted', (data) => {
     controllerScreen.classList.remove('hidden');
     controllerPseudo.textContent = currentPseudo;
 
-    // Demander la permission pour le gyroscope
-    requestGyroscopePermission();
+    setupControls();
 });
 
-// Mettre à jour la liste des joueurs
 function updatePlayersList(players) {
     playersList.innerHTML = '';
     players.forEach(player => {
@@ -108,71 +102,81 @@ function updatePlayersList(players) {
     });
 }
 
-// Gestion du gyroscope
-function requestGyroscopePermission() {
-    // iOS 13+ nécessite une permission explicite
-    if (typeof DeviceOrientationEvent !== 'undefined' &&
-        typeof DeviceOrientationEvent.requestPermission === 'function') {
-        // iOS 13+
-        permissionModal.classList.remove('hidden');
+function setupControls() {
+    console.log('Contrôles initialisés');
+    console.log('Room:', currentRoomCode, 'Pseudo:', currentPseudo);
 
-        requestPermissionBtn.addEventListener('click', async () => {
-            try {
-                const permission = await DeviceOrientationEvent.requestPermission();
-                if (permission === 'granted') {
-                    permissionModal.classList.add('hidden');
-                    startGyroscope();
-                } else {
-                    alert('Permission refusée. La manette ne fonctionnera pas sans le gyroscope.');
-                }
-            } catch (error) {
-                console.error('Erreur permission gyroscope:', error);
-                alert('Erreur lors de la demande de permission.');
-            }
-        });
+    btnLeft.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        handleDirection(-1);
+    });
+    btnLeft.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        handleDirection(0);
+    });
+    btnLeft.addEventListener('mousedown', () => handleDirection(-1));
+    btnLeft.addEventListener('mouseup', () => handleDirection(0));
+
+    btnRight.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        handleDirection(1);
+    });
+    btnRight.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        handleDirection(0);
+    });
+    btnRight.addEventListener('mousedown', () => handleDirection(1));
+    btnRight.addEventListener('mouseup', () => handleDirection(0));
+
+    [btnLeft, btnRight, btnUp, btnDown].forEach(btn => {
+        btn.addEventListener('contextmenu', (e) => e.preventDefault());
+    });
+
+    setInterval(sendControlData, 50);
+}
+
+function handleDirection(direction) {
+    currentDirection = direction;
+    console.log('Direction:', direction);
+
+    if (direction === -1) {
+        directionValue.textContent = '← Gauche';
+        btnLeft.classList.add('active');
+        btnRight.classList.remove('active');
+    } else if (direction === 1) {
+        directionValue.textContent = 'Droite →';
+        btnRight.classList.add('active');
+        btnLeft.classList.remove('active');
     } else {
-        // Android et autres navigateurs
-        startGyroscope();
+        directionValue.textContent = 'Centre';
+        btnLeft.classList.remove('active');
+        btnRight.classList.remove('active');
     }
 }
 
-function startGyroscope() {
-    gyroscopeActive = true;
+let sendCount = 0;
+function sendControlData() {
+    if (!currentRoomCode) return;
 
-    window.addEventListener('deviceorientation', handleOrientation);
-    console.log('Gyroscope activé');
-}
+    const gamma = currentDirection * 50;
 
-function handleOrientation(event) {
-    if (!gyroscopeActive) return;
-
-    const gamma = event.gamma || 0; // Inclinaison gauche/droite (-90 à 90)
-    const beta = event.beta || 0;   // Inclinaison avant/arrière (-180 à 180)
-
-    // Mettre à jour l'affichage
-    gammaValue.textContent = Math.round(gamma);
-
-    // Déplacer l'indicateur de voiture (visuel)
-    const maxOffset = 40; // % de déplacement max
-    const offset = Math.max(-maxOffset, Math.min(maxOffset, gamma));
-    const position = 50 + offset; // Centre à 50%
-    carIndicator.style.left = `${position}%`;
-
-    // Envoyer les données au serveur
     socket.emit('gyroscope', {
         roomCode: currentRoomCode,
         username: currentPseudo,
         gamma: gamma,
-        beta: beta
+        beta: 0
     });
+
+    sendCount++;
+    if (sendCount % 20 === 0) {
+        console.log(`Envoi #${sendCount}: gamma=${gamma}° (direction=${currentDirection})`);
+    }
 }
 
-// Empêcher le scroll/zoom sur mobile
 document.addEventListener('touchmove', (e) => {
     e.preventDefault();
 }, { passive: false });
 
-// Déconnexion propre
 window.addEventListener('beforeunload', () => {
     if (currentRoomCode) {
         socket.emit('leaveRoom', { roomCode: currentRoomCode });

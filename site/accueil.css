@@ -182,14 +182,12 @@ body {
     }
 }
 
-/* Bouton link */
 .btn-link {
     display: inline-block;
     text-decoration: none;
     text-align: center;
 }
 
-/* Lobby modal */
 .modal-content.lobby {
     width: 400px;
     max-width: 90vw;

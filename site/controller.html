@@ -33,22 +33,21 @@
     <div class="container hidden" id="controllerScreen">
         <div class="controller-display">
             <h2 id="controllerPseudo"></h2>
-            <div class="gyro-visual">
-                <div class="car-indicator" id="carIndicator">🚗</div>
-            </div>
-            <div class="gyro-info">
-                <p>Inclinaison: <span id="gammaValue">0</span>°</p>
-            </div>
-            <p class="instruction">Inclinez votre téléphone pour diriger la voiture!</p>
-            <p class="instruction small">← Gauche | Droite →</p>
-        </div>
-    </div>
+            <p class="instruction">Utilisez les flèches pour diriger votre voiture!</p>
 
-    <div class="modal hidden" id="permissionModal">
-        <div class="modal-content">
-            <h2>📱 Permission requise</h2>
-            <p>Pour utiliser le gyroscope comme manette, vous devez autoriser l'accès aux capteurs de mouvement.</p>
-            <button id="requestPermissionBtn" class="btn neon">Autoriser</button>
+            <div class="d-pad">
+                <button class="arrow-btn up" id="btnUp">▲</button>
+                <div class="middle-row">
+                    <button class="arrow-btn left" id="btnLeft">◀</button>
+                    <div class="center"></div>
+                    <button class="arrow-btn right" id="btnRight">▶</button>
+                </div>
+                <button class="arrow-btn down" id="btnDown">▼</button>
+            </div>
+
+            <div class="direction-indicator">
+                <p>Direction: <span id="directionValue">Centre</span></p>
+            </div>
         </div>
     </div>
 

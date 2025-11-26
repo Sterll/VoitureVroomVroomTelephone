@@ -1,4 +1,3 @@
-// Récupérer les paramètres URL
 const params = new URLSearchParams(window.location.search);
 const pseudo = params.get('pseudo');
 const roomCode = params.get('code');
@@ -9,38 +8,32 @@ if (!pseudo || !roomCode) {
     window.location.href = 'accueil.html';
 }
 
-// Connexion Socket.io
 const socket = io();
 
-// Rejoindre la room comme écran de jeu (pas manette)
+console.log(`Game.js: Tentative de rejoindre room ${roomCode}`);
 socket.emit('joinRoom', {
     roomCode: roomCode,
     username: pseudo + '_screen',
     isController: false
 });
 
-// Canvas setup
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-// Images
 let carImg = new Image();
 carImg.src = "voitoure.png";
 
 let obstacleImg = new Image();
 obstacleImg.src = "pierro.png";
 
-// Joueurs (voitures contrôlées par les manettes)
 const players = new Map();
 
-// Couleurs pour différencier les joueurs
 const playerColors = ['#cf3d3d', '#3f72af', '#4caf50', '#ff9800', '#9c27b0', '#00bcd4'];
 let colorIndex = 0;
 
-// Route config
 const roadWidth = canvas.width / 1.8;
 const laneWidth = roadWidth / 5;
 const roadLinesCenter = canvas.width / 2;
@@ -52,19 +45,16 @@ const roadEdges = [
     roadLinesCenter + roadWidth / 2
 ];
 
-// Obstacles
 let obstacles = [];
 let gameRunning = true;
 let score = 0;
 
-// Road lines
 let lineSpacing = 60;
 let lineLength = 30;
 let lineWidth = 10;
 let lineCount = Math.ceil(canvas.height / lineSpacing) + 1;
 let roadLines = [];
 
-// Initialiser les lignes de route
 for (let i = 0; i < lineCount; i++) {
     const yPos = i * lineSpacing - lineLength;
 
@@ -105,7 +95,6 @@ for (let i = 0; i < lineCount; i++) {
     });
 }
 
-// Classe joueur
 class Player {
     constructor(id, username, color) {
         this.id = id;
@@ -126,8 +115,7 @@ class Player {
         const maxLeft = roadEdges[0];
         const maxRight = roadEdges[4] - this.w;
 
-        // Convertir gamma en mouvement (-45 à 45 degrés = mouvement max)
-        const sensitivity = 0.5;
+        const sensitivity = 1.2;
         const movement = gamma * sensitivity;
 
         this.targetX = Math.max(maxLeft, Math.min(maxRight, this.x + movement));
@@ -136,7 +124,6 @@ class Player {
     update() {
         if (!this.alive) return;
 
-        // Smooth movement vers la position cible
         const diff = this.targetX - this.x;
         this.x += diff * 0.15;
     }
@@ -144,10 +131,8 @@ class Player {
     draw() {
         if (!this.alive) return;
 
-        // Dessiner la voiture
         ctx.drawImage(carImg, this.x, this.y, this.w, this.h);
 
-        // Dessiner le nom au-dessus
         ctx.fillStyle = this.color;
         ctx.font = 'bold 14px Arial';
         ctx.textAlign = 'center';
@@ -162,13 +147,11 @@ class Player {
     }
 }
 
-// Initialiser la taille de voiture quand l'image charge
 carImg.onload = () => {
     const scale = 0.35;
     const w = carImg.width * scale;
     const h = carImg.height * scale;
 
-    // Mettre à jour les dimensions pour tous les joueurs existants
     players.forEach(player => {
         player.w = w;
         player.h = h;
@@ -176,10 +159,28 @@ carImg.onload = () => {
     });
 };
 
-// Socket events
+socket.on('roomJoined', (data) => {
+    console.log('✅ Game.js: Room rejointe!', data);
+    console.log(`   ${data.players.length} joueur(s) présent(s)`);
+
+    data.players.forEach(player => {
+        if (player.isController && !players.has(player.id)) {
+            const color = playerColors[colorIndex % playerColors.length];
+            colorIndex++;
+
+            const newPlayer = new Player(player.id, player.username, color);
+            if (carImg.complete) {
+                newPlayer.w = carImg.width * 0.35;
+                newPlayer.h = carImg.height * 0.35;
+            }
+            players.set(player.id, newPlayer);
+            console.log(`🎮 Joueur manette créé: ${player.username} (${player.id})`);
+        }
+    });
+});
+
 socket.on('playerJoined', (data) => {
     if (data.isController) {
-        // Nouveau joueur manette = nouvelle voiture
         const color = playerColors[colorIndex % playerColors.length];
         colorIndex++;
 
@@ -195,9 +196,12 @@ socket.on('playerJoined', (data) => {
 });
 
 socket.on('gyroscopeData', (data) => {
+    console.log('Données reçues:', data);
     const player = players.get(data.playerId);
     if (player) {
         player.updateFromGyro(data.gamma);
+    } else {
+        console.log('Joueur non trouvé:', data.playerId);
     }
 });
 
@@ -206,18 +210,14 @@ socket.on('playerLeft', (data) => {
     console.log(`Joueur parti: ${data.username}`);
 });
 
-// Fonctions de dessin
 function drawRoad() {
-    // Background
     ctx.fillStyle = "#2c3e50";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Route
     ctx.fillStyle = "#343a40";
     const roadStartX = roadLinesCenter - roadWidth / 2;
     ctx.fillRect(roadStartX, 0, roadWidth, canvas.height);
 
-    // Lignes
     roadLines.forEach(line => {
         ctx.fillStyle = line.isEdge ? "#8d99ae" : "#ffffff";
         ctx.fillRect(line.x, line.y, line.w, line.h);
@@ -229,7 +229,7 @@ function drawObstacles() {
 }
 
 function spawnObstacle() {
-    const MAX_OBSTACLES = 2 + Math.floor(score / 500); // Plus d'obstacles avec le score
+    const MAX_OBSTACLES = 2 + Math.floor(score / 500);
 
     if (obstacles.length >= Math.min(MAX_OBSTACLES, 5)) return;
 
@@ -253,10 +253,8 @@ function updateScore() {
 function update() {
     if (!gameRunning) return;
 
-    // Clear
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Update road lines
     roadLines.forEach(line => {
         line.y += 15;
         if (line.y > canvas.height) {
@@ -266,18 +264,15 @@ function update() {
 
     drawRoad();
 
-    // Update obstacles
-    const obstacleSpeed = 10 + Math.floor(score / 1000) * 2; // Vitesse augmente
+    const obstacleSpeed = 10 + Math.floor(score / 1000) * 2;
     obstacles.forEach(o => o.y += obstacleSpeed);
     obstacles = obstacles.filter(o => o.y < canvas.height + 100);
     drawObstacles();
 
-    // Update et draw players
     players.forEach(player => {
         player.update();
         player.draw();
 
-        // Check collisions
         obstacles.forEach(o => {
             if (player.alive && player.checkCollision(o)) {
                 player.alive = false;
@@ -286,7 +281,6 @@ function update() {
         });
     });
 
-    // Check si tous les joueurs sont morts
     let allDead = true;
     players.forEach(player => {
         if (player.alive) allDead = false;
@@ -297,7 +291,6 @@ function update() {
         return;
     }
 
-    // Update score
     updateScore();
 
     requestAnimationFrame(update);
@@ -310,7 +303,6 @@ function gameOver() {
 }
 
 function restartGame() {
-    // Reset tous les joueurs
     players.forEach(player => {
         player.alive = true;
         player.x = canvas.width / 2 - player.w / 2;
@@ -324,32 +316,10 @@ function restartGame() {
     update();
 }
 
-// Spawn obstacles périodiquement
 setInterval(() => {
     if (gameRunning) spawnObstacle();
 }, 1500);
 
-// Créer un joueur local pour le mode solo/test (contrôle clavier)
-const localPlayer = new Player('local', pseudo || 'Joueur', '#cf3d3d');
-players.set('local', localPlayer);
-
-// Contrôles clavier pour le joueur local
-document.addEventListener("keydown", e => {
-    if (!gameRunning) return;
-    const player = players.get('local');
-    if (!player || !player.alive) return;
-
-    const maxLeft = roadEdges[0];
-    const maxRight = roadEdges[4] - player.w;
-
-    if (e.key === "ArrowLeft") {
-        player.targetX = Math.max(player.x - player.speed * 5, maxLeft);
-    }
-    if (e.key === "ArrowRight") {
-        player.targetX = Math.min(player.x + player.speed * 5, maxRight);
-    }
-});
-
-// Démarrer le jeu
 console.log(`Jeu démarré - Room: ${roomCode}, Host: ${pseudo}`);
+console.log('En attente des joueurs manettes...');
 update();

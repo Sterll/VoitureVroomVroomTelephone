@@ -9,28 +9,19 @@ const io = socketIO(server);
 
 const PORT = process.env.PORT || 8080;
 
-// Servir les fichiers statiques depuis le dossier 'site'
 app.use(express.static(path.join(__dirname, '..', 'site')));
 
 const rooms = new Map();
 
-
-/**
- * Generates a random 6-character room code.
- * @returns {string} A 6-character room code.
- */
 function generateRoomCode() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let code;
     do {
-        // Reset the code
         code = '';
-        // Generate a random 6-character code
         for (let i = 0; i < 6; i++) {
             code += chars.charAt(Math.floor(Math.random() * chars.length));
         }
     } while (rooms.has(code));
-    // Return the generated code if it's not already in use
     return code;
 }
 
@@ -75,7 +66,8 @@ io.on('connection', (socket) => {
         rooms.set(roomCode, room);
         socket.join(roomCode);
 
-        console.log(`Salle ${roomCode} créée par ${username} (${socket.id})`);
+        console.log(`✅ Salle ${roomCode} créée par ${username} (${socket.id})`);
+        console.log(`   Rooms actives: [${Array.from(rooms.keys()).join(', ')}]`);
 
         socket.emit('roomCreated', {
             roomCode,
@@ -99,7 +91,7 @@ io.on('connection', (socket) => {
             return;
         }
 
-        if (room.gameStarted) {
+        if (room.gameStarted && isController) {
             socket.emit('error', { message: 'La partie a déjà commencé' });
             return;
         }
@@ -120,7 +112,8 @@ io.on('connection', (socket) => {
         room.players.push(player);
         socket.join(roomCode.toUpperCase());
 
-        console.log(`${username} (${socket.id}) a rejoint la salle ${roomCode} ${isController ? '(manette)' : '(écran)'}`);
+        console.log(`➕ ${username} (${socket.id}) a rejoint ${roomCode} ${isController ? '🎮 manette' : '🖥️  écran'}`);
+        console.log(`   Joueurs dans ${roomCode}: ${room.players.map(p => p.username).join(', ')}`);
 
         socket.emit('roomJoined', {
             roomCode: roomCode.toUpperCase(),
@@ -137,16 +130,28 @@ io.on('connection', (socket) => {
         });
     });
 
-    // Recevoir les données gyroscope de la manette et les transmettre au jeu
     socket.on('gyroscope', (data) => {
         const { roomCode, gamma, beta, username } = data;
 
-        if (!roomCode) return;
+        if (!roomCode) {
+            console.log('⚠️  Données sans roomCode');
+            return;
+        }
 
         const room = rooms.get(roomCode.toUpperCase());
-        if (!room) return;
+        if (!room) {
+            console.log(`⚠️  Room ${roomCode} introuvable`);
+            console.log(`   Rooms existantes: [${Array.from(rooms.keys()).join(', ')}]`);
+            console.log(`   Socket ${socket.id} cherche la room ${roomCode.toUpperCase()}`);
+            return;
+        }
 
-        // Transmettre les données gyroscope à tous les autres dans la room (le PC)
+        let direction = 'CENTRE';
+        if (gamma < 0) direction = 'GAUCHE';
+        if (gamma > 0) direction = 'DROITE';
+
+        console.log(`🎮 ${username} → ${direction}`);
+
         socket.to(roomCode.toUpperCase()).emit('gyroscopeData', {
             playerId: socket.id,
             username: username,
@@ -181,7 +186,6 @@ io.on('connection', (socket) => {
             return;
         }
 
-        // Permettre de jouer avec au moins 1 manette
         const controllers = room.players.filter(p => p.isController);
         if (controllers.length < 1) {
             socket.emit('error', { message: 'Il faut au moins 1 manette connectée pour commencer' });
@@ -190,7 +194,7 @@ io.on('connection', (socket) => {
 
         room.gameStarted = true;
 
-        console.log(`Partie démarrée dans la salle ${roomCode}`);
+        console.log(`🎮 Partie démarrée dans ${roomCode} avec ${room.players.length} joueur(s)`);
 
         io.to(roomCode).emit('gameStarted', {
             players: room.players
@@ -230,9 +234,14 @@ io.on('connection', (socket) => {
 
         console.log(`${player.username} (${socket.id}) a quitté la salle ${playerRoom}`);
 
-        if (room.players.length === 0) {
+        if (room.players.length === 0 && !room.gameStarted) {
             rooms.delete(playerRoom);
             console.log(`Salle ${playerRoom} supprimée (vide)`);
+            return;
+        }
+
+        if (room.players.length === 0 && room.gameStarted) {
+            console.log(`Salle ${playerRoom} vide mais jeu démarré, on attend une reconnexion...`);
             return;
         }
 
